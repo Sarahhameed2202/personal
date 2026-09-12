@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sarah Hameed — Project Manager, Scrum Master and technology professional." />
+  <title>Sarah Hameed | Project Manager</title>
+
+  <style>
+    :root{
+      --bg:#fafafa;
+      --card:#ffffff;
+      --text:#171717;
+      --muted:#737373;
+      --line:#e7e7e7;
+      --accent:#d62976;
+      --accent2:#962fbf;
+      --soft:#f3f3f3;
+      --max:1080px;
+      --radius:22px;
+      --shadow:0 12px 40px rgba(0,0,0,.07);
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      color:var(--text);
+      background:var(--bg);
+      line-height:1.55;
+    }
+    a{color:inherit;text-decoration:none}
+    button{font:inherit}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:rgba(250,250,250,.88);
+      backdrop-filter:blur(18px);
+      border-bottom:1px solid rgba(0,0,0,.06);
+    }
+    .nav{
+      max-width:var(--max);
+      height:64px;
+      margin:auto;
+      padding:0 24px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .brand{
+      font-weight:800;
+      letter-spacing:-.04em;
+      font-size:20px;
+    }
+    .navlinks{display:flex;gap:8px}
+    .navlinks a{
+      padding:9px 13px;
+      border-radius:12px;
+      color:#444;
+      font-size:14px;
+      font-weight:600;
+    }
+    .navlinks a:hover{background:#eee;color:#111}
+
+    main{max-width:var(--max);margin:auto;padding:28px 24px 80px}
+
+    .profile{
+      display:grid;
+      grid-template-columns:190px 1fr;
+      gap:38px;
+      padding:34px 8px 28px;
+      align-items:start;
+    }
+    .avatar{
+      width:172px;
+      height:172px;
+      border-radius:50%;
+      padding:5px;
+      background:linear-gradient(135deg,#feda75,#d62976,#962fbf,#4f5bd5);
+      box-shadow:0 10px 35px rgba(150,47,191,.18);
+    }
+    .avatar-inner{
+      width:100%;
+      height:100%;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at 50% 32%, #fff 0 16%, transparent 16.5%),
+        radial-gradient(circle at 50% 45%, #dcdcdc 0 22%, transparent 22.5%),
+        linear-gradient(145deg,#f0f0f0,#bdbdbd);
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      position:relative;
+    }
+    .avatar-inner:after{
+      content:"SH";
+      position:absolute;
+      bottom:21px;
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:.08em;
+      color:#555;
+    }
+
+    .profile-main{min-width:0}
+    .title-row{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap:14px;
+      margin-bottom:8px;
+    }
+    h1{
+      margin:0;
+      font-size:29px;
+      letter-spacing:-.045em;
+    }
+    .verified{
+      width:22px;height:22px;border-radius:50%;
+      display:grid;place-items:center;
+      color:white;background:#3897f0;font-size:13px;font-weight:900;
+    }
+    .actions{display:flex;gap:9px;margin-left:4px}
+    .btn{
+      border:0;
+      border-radius:11px;
+      padding:9px 15px;
+      background:#111;
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .btn.secondary{
+      background:#efefef;color:#111;
+    }
+    .btn:hover{transform:translateY(-1px)}
+
+    .handle{color:var(--muted);font-size:14px;margin-bottom:16px}
+    .stats{display:flex;gap:34px;margin:12px 0 17px}
+    .stat strong{font-size:16px}
+    .stat span{color:#555;font-size:14px}
+    .bio{max-width:720px;font-size:15px}
+    .bio strong{font-weight:750}
+    .location{margin-top:7px;color:#555;font-size:14px}
+
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+    .chip{
+      background:#fff;border:1px solid var(--line);
+      border-radius:999px;padding:7px 12px;
+      font-size:12px;font-weight:700;color:#444;
+    }
+
+    .section{
+      margin-top:24px;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      overflow:hidden;
+    }
+    .section-head{
+      padding:22px 24px 17px;
+      display:flex;
+      align-items:end;
+      justify-content:space-between;
+      gap:20px;
+    }
+    .eyebrow{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      font-weight:800;
+      color:var(--accent);
+      margin-bottom:5px;
+    }
+    h2{margin:0;font-size:21px;letter-spacing:-.03em}
+    .section-note{color:var(--muted);font-size:13px}
+
+    .career{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:1px;
+      background:var(--line);
+      border-top:1px solid var(--line);
+    }
+    .role{
+      background:#fff;
+      padding:24px;
+    }
+    .role-top{display:flex;justify-content:space-between;gap:15px}
+    .company{font-weight:800;font-size:17px}
+    .role-title{font-weight:650;margin-top:3px}
+    .date{color:var(--muted);font-size:12px;white-space:nowrap}
+    .role p{font-size:14px;color:#555;margin:13px 0 0}
+    .role ul{padding-left:18px;margin:13px 0 0;color:#555;font-size:13px}
+    .role li{margin:7px 0}
+
+    .skills{
+      padding:4px 24px 25px;
+      display:flex;flex-wrap:wrap;gap:9px;
+    }
+    .skill{
+      padding:10px 13px;
+      border-radius:13px;
+      background:var(--soft);
+      font-size:13px;
+      font-weight:650;
+    }
+
+    .education{
+      padding:2px 24px 25px;
+    }
+    .edu-card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:18px;
+      display:flex;
+      justify-content:space-between;
+      gap:20px;
+    }
+    .edu-school{font-weight:800}
+    .edu-degree{font-size:14px;margin-top:3px}
+    .edu-meta{color:var(--muted);font-size:12px;margin-top:6px}
+    .edu-years{font-size:13px;font-weight:700;color:#555}
+
+    .contact{
+      padding:24px;
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:20px;
+      align-items:center;
+    }
+    .contact p{margin:5px 0;color:#555;font-size:14px}
+    .contact-links{display:flex;flex-wrap:wrap;gap:10px}
+    .contact-link{
+      border:1px solid var(--line);
+      padding:10px 13px;
+      border-radius:12px;
+      font-size:13px;
+      font-weight:700;
+      background:#fff;
+    }
+    .contact-link:hover{border-color:#bbb}
+
+    footer{
+      text-align:center;
+      padding:30px 10px 5px;
+      color:#999;
+      font-size:12px;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:24px;
+      transform:translate(-50%,20px);
+      opacity:0;
+      pointer-events:none;
+      background:#111;color:#fff;
+      padding:11px 15px;
+      border-radius:12px;
+      font-size:13px;
+      transition:.25s ease;
+      z-index:100;
+    }
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+
+    @media(max-width:760px){
+      .nav{padding:0 16px}
+      .navlinks a:nth-child(n+3){display:none}
+      main{padding:16px 14px 60px}
+      .profile{
+        grid-template-columns:82px 1fr;
+        gap:18px;
+        padding:25px 3px 20px;
+      }
+      .avatar{width:82px;height:82px;padding:3px}
+      .avatar-inner:after{bottom:8px;font-size:12px}
+      .title-row{gap:7px}
+      h1{font-size:23px}
+      .actions{width:100%;margin:4px 0 0}
+      .actions .btn{flex:1}
+      .stats{gap:17px}
+      .stat span{display:block}
+      .career{grid-template-columns:1fr}
+      .section-head{padding:20px 18px 15px}
+      .role{padding:20px 18px}
+      .contact{grid-template-columns:1fr}
+      .education{padding:2px 18px 20px}
+      .skills{padding:4px 18px 20px}
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <nav class="nav">
+      <a class="brand" href="#top">sarah.hameed</a>
+      <div class="navlinks">
+        <a href="#about">About</a>
+        <a href="#experience">Experience</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="profile" id="about">
+      <div class="avatar" aria-label="Sarah Hameed profile">
+        <div class="avatar-inner"></div>
+      </div>
+
+      <div class="profile-main">
+        <div class="title-row">
+          <h1>Sarah Hameed</h1>
+          <span class="verified" title="Profile">✓</span>
+          <div class="actions">
+            <a class="btn" href="#contact">Connect</a>
+            <a class="btn secondary" href="#experience">View work</a>
+          </div>
+        </div>
+
+        <div class="handle">Project Manager · Scrum Master · IT & Telecom</div>
+
+        <div class="stats" aria-label="Career statistics">
+          <div class="stat"><strong>8+</strong> <span>years experience</span></div>
+          <div class="stat"><strong>2</strong> <span>core roles</span></div>
+          <div class="stat"><strong>PMP</strong> <span>certified</span></div>
+        </div>
+
+        <div class="bio">
+          <strong>Project Manager at Vodafone Idea Limited</strong><br />
+          PMP Certified · Project Management · Scrum Master · Agile Development · Planning & Optimization
+          <div class="location">Hyderabad, Telangana, India</div>
+        </div>
+
+        <div class="chips">
+          <span class="chip">Project Management</span>
+          <span class="chip">Scrum Master</span>
+          <span class="chip">Agile</span>
+          <span class="chip">Data & Analytics</span>
+          <span class="chip">Telecom</span>
+          <span class="chip">Risk Management</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="experience">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Career</div>
+          <h2>Experience</h2>
+        </div>
+        <div class="section-note">Selected professional journey</div>
+      </div>
+
+      <div class="career">
+        <article class="role">
+          <div class="role-top">
+            <div>
+              <div class="company">Vodafone Idea Limited</div>
+              <div class="role-title">Project Manager</div>
+            </div>
+            <div class="date">Sep 2019 – Jul 2020</div>
+          </div>
+          <p>
+            Led a data analytics and data science project as an ITPM, covering project planning,
+            governance, communication and delivery management.
+          </p>
+          <ul>
+            <li>Developed project charter and project plans.</li>
+            <li>Managed RACI, incidents, changes, procurement and risks.</li>
+            <li>Protected the team from distractions and facilitated issue resolution.</li>
+            <li>Tracked milestones and compared actual performance against planned performance.</li>
+            <li>Presented technical and financial updates to Executive Directors, Chairman and CEO.</li>
+            <li>Successfully completed the project despite budget reduction during COVID-19, with an extended timeline.</li>
+          </ul>
+        </article>
+
+        <article class="role">
+          <div class="role-top">
+            <div>
+              <div class="company">Nokia</div>
+              <div class="role-title">NSS Engineer · Core Planner</div>
+            </div>
+            <div class="date">Feb 2010 – Apr 2017</div>
+          </div>
+          <p>
+            Seven-plus years of experience in telecom engineering and core planning, building a
+            strong technical foundation for later project leadership.
+          </p>
+          <ul>
+            <li>Core planning and telecom engineering experience.</li>
+            <li>Technical background supporting IT and telecom project delivery.</li>
+            <li>Progression into broader planning and project management responsibilities.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Toolkit</div>
+          <h2>Specialties</h2>
+        </div>
+      </div>
+      <div class="skills">
+        <span class="skill">PMP Certified</span>
+        <span class="skill">Project Management</span>
+        <span class="skill">Scrum Master</span>
+        <span class="skill">Agile Development</span>
+        <span class="skill">Planning & Optimization</span>
+        <span class="skill">Project Charter</span>
+        <span class="skill">RACI</span>
+        <span class="skill">Incident Management</span>
+        <span class="skill">Change Management</span>
+        <span class="skill">Procurement Management</span>
+        <span class="skill">Risk Management</span>
+        <span class="skill">KPI</span>
+        <span class="skill">Business Plan</span>
+        <span class="skill">SWOT</span>
+        <span class="skill">Feasibility Study</span>
+        <span class="skill">Scope of Work</span>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Education</div>
+          <h2>Academic background</h2>
+        </div>
+      </div>
+      <div class="education">
+        <div class="edu-card">
+          <div>
+            <div class="edu-school">Chaitanya Bharathi Institute Of Technology</div>
+            <div class="edu-degree">Bachelor of Engineering (BE), Electrical, Electronics and Communications Engineering</div>
+            <div class="edu-meta">Engineering</div>
+          </div>
+          <div class="edu-years">2005 – 2009</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Say hello</div>
+          <h2>Let's connect</h2>
+        </div>
+      </div>
+      <div class="contact">
+        <div>
+          <strong>Sarah Hameed</strong>
+          <p>Project Manager · PMP Certified · Scrum Master</p>
+          <p>Open to professional conversations and opportunities.</p>
+        </div>
+        <div class="contact-links">
+          <a class="contact-link" href="mailto:sarah.hameednsn@gmail.com">Email</a>
+          <a class="contact-link" href="https://www.linkedin.com/in/sarah-hameed-0b5096203" target="_blank" rel="noopener">LinkedIn ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      Designed as a single-file personal portfolio with an Instagram-inspired profile experience.
+    </footer>
+  </main>
+
+  <div class="toast" id="toast">Email address copied</div>
+
+  <script>
+    // Small interaction: clicking the email button copies the address when possible.
+    const email = "sarah.hameednsn@gmail.com";
+    const emailLink = document.querySelector('a[href^="mailto:"]');
+    const toast = document.getElementById("toast");
+
+    emailLink.addEventListener("click", async (event) => {
+      if (navigator.clipboard) {
+        try {
+          await navigator.clipboard.writeText(email);
+          toast.classList.add("show");
+          setTimeout(() => toast.classList.remove("show"), 1800);
+        } catch (_) {}
+      }
+    });
+  </script>
+</body>
+</html>
