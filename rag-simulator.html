@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG Pipeline Inspector</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E7EAEF;
+  --panel:#FFFFFF;
+  --panel-sunk:#F1F3F7;
+  --ink:#151B26;
+  --ink-2:#5A6476;
+  --ink-3:#8A93A3;
+  --rule:#CBD2DC;
+  --rule-soft:#E0E5EC;
+  --indigo:#2E37BE;
+  --indigo-soft:#E6E7FA;
+  --heat:#AE1470;
+  --heat-soft:#FAE4F1;
+  --teal:#0C6F62;
+  --teal-soft:#DFF0ED;
+  --amber:#8A5A00;
+  --amber-soft:#FBEFD6;
+  --sans:'IBM Plex Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+}
+:focus-visible{outline:2.5px solid var(--indigo);outline-offset:2px;border-radius:2px}
+
+/* ---------- shell ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 120px}
+
+header.masthead{
+  padding:38px 0 26px;
+  border-bottom:1px solid var(--rule);
+  margin-bottom:26px;
+}
+.masthead h1{
+  font-size:clamp(28px,4.2vw,44px);
+  font-weight:600;
+  letter-spacing:-0.025em;
+  line-height:1.05;
+  margin:0 0 10px;
+}
+.masthead h1 .dim{color:var(--ink-3);font-weight:400}
+.masthead p{
+  margin:0;max-width:62ch;color:var(--ink-2);font-size:15.5px;
+}
+
+/* ---------- pipeline rail ---------- */
+.rail{
+  position:sticky;top:0;z-index:40;
+  background:var(--paper);
+  border-bottom:1px solid var(--rule);
+  margin:0 -20px 30px;
+  padding:10px 20px;
+}
+.rail-inner{
+  max-width:1140px;margin:0 auto;
+  display:flex;gap:4px;align-items:stretch;overflow-x:auto;
+  scrollbar-width:thin;
+}
+.rail-phase{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;
+  color:var(--ink-3);align-self:center;padding:0 10px 0 2px;white-space:nowrap;
+}
+.rail-btn{
+  flex:1 1 0;min-width:112px;
+  background:none;border:0;border-top:3px solid var(--rule-soft);
+  padding:8px 6px 6px;text-align:left;cursor:pointer;
+  font-family:var(--sans);color:var(--ink-3);
+  transition:color .15s,border-color .15s;
+}
+.rail-btn .n{font-family:var(--mono);font-size:11px;display:block}
+.rail-btn .l{font-size:13px;font-weight:500;display:block;white-space:nowrap}
+.rail-btn.ready{color:var(--ink-2);border-top-color:var(--rule)}
+.rail-btn.done{color:var(--teal);border-top-color:var(--teal)}
+.rail-btn.active{color:var(--ink);border-top-color:var(--indigo)}
+.rail-btn:hover{color:var(--ink)}
+
+/* ---------- sections ---------- */
+section.stage{margin:0 0 14px;scroll-margin-top:78px}
+.stage-head{
+  display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  padding:16px 0 10px;border-bottom:1px solid var(--rule);
+}
+.stage-num{
+  font-family:var(--mono);font-size:12px;color:var(--ink-3);
+  width:26px;flex:none;padding-top:3px;
+}
+.stage-title{font-size:20px;font-weight:600;letter-spacing:-.015em;margin:0}
+.stage-sub{color:var(--ink-2);font-size:14px;margin:0;flex:1 1 320px;min-width:0}
+.stage-body{padding:18px 0 4px;margin-left:40px}
+@media(max-width:700px){.stage-body{margin-left:0}}
+
+.locked .stage-title,.locked .stage-sub{color:var(--ink-3)}
+.empty-note{
+  background:var(--panel-sunk);border:1px dashed var(--rule);
+  padding:14px 16px;color:var(--ink-2);font-size:14px;border-radius:3px;
+}
+.empty-note b{color:var(--ink);font-weight:600}
+
+/* ---------- controls ---------- */
+.controls{display:flex;flex-wrap:wrap;gap:18px 26px;align-items:flex-end;margin-bottom:18px}
+.ctl{display:flex;flex-direction:column;gap:5px}
+.ctl label{font-size:12.5px;color:var(--ink-2);font-weight:500}
+.ctl .val{font-family:var(--mono);color:var(--ink);font-size:12.5px}
+input[type=range]{width:180px;accent-color:var(--indigo)}
+button.run{
+  background:var(--ink);color:#fff;border:0;border-radius:3px;
+  padding:9px 18px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;
+}
+button.run:hover{background:var(--indigo)}
+button.run[disabled]{background:var(--rule);color:var(--ink-3);cursor:not-allowed}
+button.ghost{
+  background:none;border:1px solid var(--rule);border-radius:3px;color:var(--ink-2);
+  padding:7px 13px;font-family:var(--sans);font-size:13px;cursor:pointer;
+}
+button.ghost:hover{border-color:var(--ink-2);color:var(--ink)}
+button.ghost[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+
+textarea,input[type=text]{
+  width:100%;font-family:var(--sans);font-size:14px;color:var(--ink);
+  background:var(--panel);border:1px solid var(--rule);border-radius:3px;padding:11px 13px;
+  line-height:1.5;resize:vertical;
+}
+textarea:focus,input[type=text]:focus{border-color:var(--indigo);outline:none;box-shadow:0 0 0 3px var(--indigo-soft)}
+
+/* ---------- docs ---------- */
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.doc{background:var(--panel);border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.doc-bar{
+  display:flex;align-items:center;gap:8px;padding:7px 11px;
+  background:var(--panel-sunk);border-bottom:1px solid var(--rule-soft);
+}
+.doc-bar .name{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);flex:1}
+.doc textarea{border:0;border-radius:0;min-height:128px;font-size:13.5px}
+.doc textarea:focus{box-shadow:none}
+.x{background:none;border:0;color:var(--ink-3);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px}
+.x:hover{color:var(--heat)}
+
+/* ---------- chunks ---------- */
+.chunk-list{display:flex;flex-direction:column;gap:9px}
+.chunk{
+  background:var(--panel);border:1px solid var(--rule);border-radius:3px;
+  padding:11px 13px;display:grid;grid-template-columns:72px 1fr;gap:14px;align-items:start;
+}
+.chunk .cid{font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.5}
+.chunk .cid b{display:block;color:var(--indigo);font-size:12px;font-weight:600}
+.chunk .ctext{font-size:13.5px;line-height:1.6;color:var(--ink)}
+.chunk .ctext .ov{background:var(--amber-soft);border-bottom:1px solid #E0C98C}
+.chunk.hit{border-color:var(--heat);box-shadow:0 0 0 3px var(--heat-soft)}
+@media(max-width:560px){.chunk{grid-template-columns:1fr;gap:6px}}
+
+/* vector strip */
+.vec{display:flex;align-items:flex-end;gap:1px;height:26px;margin-top:9px}
+.vec i{flex:1;background:var(--indigo);min-height:1px;display:block;opacity:.85}
+.vec.q i{background:var(--heat)}
+.vec-cap{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin-top:4px;display:block}
+
+/* ---------- scoreboard ---------- */
+table.scores{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--panel)}
+table.scores th{
+  text-align:left;font-weight:500;font-size:12px;color:var(--ink-2);
+  padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap;
+}
+table.scores td{padding:8px 10px;border-bottom:1px solid var(--rule-soft);vertical-align:middle}
+table.scores tr.in td{background:var(--heat-soft)}
+table.scores tr.in td:first-child{box-shadow:inset 3px 0 0 var(--heat)}
+.simbar{position:relative;height:16px;background:var(--panel-sunk);border-radius:2px;min-width:110px}
+.simbar i{position:absolute;left:0;top:0;bottom:0;background:var(--indigo);border-radius:2px;display:block}
+tr.in .simbar i{background:var(--heat)}
+td.num{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+td.src{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);white-space:nowrap}
+td.snip{color:var(--ink-2);font-size:12.5px}
+.cut-row td{padding:0;border:0}
+.cut{
+  display:flex;align-items:center;gap:10px;padding:5px 10px;
+  font-family:var(--mono);font-size:10.5px;color:var(--heat);
+}
+.cut:before,.cut:after{content:"";flex:1;border-top:1px dashed var(--heat)}
+
+/* ---------- plot ---------- */
+.plot-wrap{display:grid;grid-template-columns:1fr 250px;gap:20px;align-items:start}
+@media(max-width:820px){.plot-wrap{grid-template-columns:1fr}}
+svg.plot{width:100%;height:auto;background:var(--panel);border:1px solid var(--rule);border-radius:3px;display:block}
+.legend{font-size:13px;color:var(--ink-2)}
+.legend p{margin:0 0 12px}
+.key{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:13px}
+.key .sw{width:11px;height:11px;border-radius:50%;flex:none}
+
+/* ---------- prompt ---------- */
+pre.prompt{
+  background:#1A2130;color:#DCE3EF;font-family:var(--mono);font-size:12.5px;line-height:1.65;
+  padding:18px 20px;border-radius:3px;overflow-x:auto;margin:0;white-space:pre-wrap;word-break:break-word;
+}
+pre.prompt .k{color:#8FA6C8}
+pre.prompt .c{color:#F2A9D3}
+pre.prompt .q{color:#9BE3C9}
+.tokline{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);margin-top:8px}
+
+/* ---------- answer ---------- */
+.answer-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.ans{
+  background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--teal);
+  border-radius:3px;padding:16px 18px;font-size:15px;line-height:1.65;
+}
+.ans.bad{border-left-color:var(--heat)}
+.ans .tag{
+  font-family:var(--mono);font-size:10.5px;color:var(--teal);display:block;margin-bottom:7px;
+}
+.ans.bad .tag{color:var(--heat)}
+.ans mark{background:var(--teal-soft);color:inherit;padding:0 1px}
+.ans.bad mark{background:var(--heat-soft)}
+.cite{font-family:var(--mono);font-size:11px;color:var(--indigo);vertical-align:super}
+
+/* ---------- misc ---------- */
+.stat-row{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--rule);border-radius:3px;background:var(--panel);margin-bottom:16px}
+.stat{padding:11px 16px;border-right:1px solid var(--rule-soft);flex:1 1 auto;min-width:118px}
+.stat:last-child{border-right:0}
+.stat b{display:block;font-family:var(--mono);font-size:19px;font-weight:500;letter-spacing:-.01em}
+.stat span{font-size:12px;color:var(--ink-2)}
+.note{
+  font-size:13px;color:var(--ink-2);background:var(--panel-sunk);
+  border-left:3px solid var(--rule);padding:10px 14px;margin:16px 0 0;border-radius:0 3px 3px 0;
+}
+.note b{color:var(--ink)}
+.stale{
+  background:var(--amber-soft);border-left:3px solid var(--amber);color:#4A3200;
+  padding:10px 14px;font-size:13.5px;margin-bottom:16px;border-radius:0 3px 3px 0;
+}
+.hidden{display:none !important}
+footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--rule);color:var(--ink-3);font-size:12.5px;max-width:70ch}
+</style>
+</head>
+<body>
+
+<nav class="rail" aria-label="Pipeline stages">
+  <div class="rail-inner">
+    <span class="rail-phase">offline&nbsp;/&nbsp;ingest</span>
+    <button class="rail-btn" data-goto="s1"><span class="n">1</span><span class="l">Documents</span></button>
+    <button class="rail-btn" data-goto="s2"><span class="n">2</span><span class="l">Chunk</span></button>
+    <button class="rail-btn" data-goto="s3"><span class="n">3</span><span class="l">Embed</span></button>
+    <button class="rail-btn" data-goto="s4"><span class="n">4</span><span class="l">Index</span></button>
+    <span class="rail-phase">live&nbsp;/&nbsp;query</span>
+    <button class="rail-btn" data-goto="s5"><span class="n">5</span><span class="l">Retrieve</span></button>
+    <button class="rail-btn" data-goto="s6"><span class="n">6</span><span class="l">Augment</span></button>
+    <button class="rail-btn" data-goto="s7"><span class="n">7</span><span class="l">Generate</span></button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<header class="masthead">
+  <h1>RAG pipeline inspector <span class="dim">— every step, actually computed</span></h1>
+  <p>Nothing here is faked. The chunker splits real text, the embedder produces real vectors, and
+     cosine similarity is calculated in the browser. Change something upstream and watch everything
+     downstream go stale, which is the part most diagrams leave out.</p>
+</header>
+
+<!-- ============ 1 ============ -->
+<section class="stage" id="s1">
+  <div class="stage-head">
+    <span class="stage-num">01</span>
+    <h2 class="stage-title">Documents</h2>
+    <p class="stage-sub">Your knowledge source. Edit freely — this is the only content the model will
+       be allowed to answer from.</p>
+  </div>
+  <div class="stage-body">
+    <div class="doc-grid" id="docGrid"></div>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="ghost" id="addDoc">Add a document</button>
+      <button class="ghost" id="resetDocs">Restore the samples</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="stage" id="s2">
+  <div class="stage-head">
+    <span class="stage-num">02</span>
+    <h2 class="stage-title">Chunk</h2>
+    <p class="stage-sub">Documents are cut into passages small enough to fit a prompt and specific
+       enough to match one question. Overlap stops a sentence being severed mid-idea.</p>
+  </div>
+  <div class="stage-body">
+    <div class="controls">
+      <div class="ctl">
+        <label for="csize">Chunk size <span class="val" id="csizeV">30 words</span></label>
+        <input type="range" id="csize" min="10" max="90" step="5" value="30">
+      </div>
+      <div class="ctl">
+        <label for="covl">Overlap <span class="val" id="covlV">8 words</span></label>
+        <input type="range" id="covl" min="0" max="30" step="2" value="8">
+      </div>
+      <button class="run" id="runChunk">Split into chunks</button>
+    </div>
+    <div id="chunkOut"><div class="empty-note">No chunks yet. Set a size and press <b>Split into chunks</b>.</div></div>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="stage" id="s3">
+  <div class="stage-head">
+    <span class="stage-num">03</span>
+    <h2 class="stage-title">Embed</h2>
+    <p class="stage-sub">Each chunk becomes one fixed-length vector. Same chunk in, same vector out —
+       and the query will have to go through this identical function later.</p>
+  </div>
+  <div class="stage-body" id="embedBody">
+    <div class="controls">
+      <div class="ctl">
+        <label for="dims">Vector dimensions <span class="val" id="dimsV">48</span></label>
+        <input type="range" id="dims" min="8" max="96" step="8" value="48">
+      </div>
+      <button class="run" id="runEmbed" disabled>Embed all chunks</button>
+    </div>
+    <div id="embedOut"><div class="empty-note">Waiting on step <b>02</b>.</div></div>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="stage" id="s4">
+  <div class="stage-head">
+    <span class="stage-num">04</span>
+    <h2 class="stage-title">Index</h2>
+    <p class="stage-sub">Vectors plus their original text go into the store. Everything up to this
+       point happens offline, before any user exists.</p>
+  </div>
+  <div class="stage-body">
+    <div id="indexOut"><div class="empty-note">Waiting on step <b>03</b>.</div></div>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="stage" id="s5">
+  <div class="stage-head">
+    <span class="stage-num">05</span>
+    <h2 class="stage-title">Retrieve</h2>
+    <p class="stage-sub">The question is embedded by the same function, then compared against every
+       stored vector. Highest cosine scores win.</p>
+  </div>
+  <div class="stage-body">
+    <div id="queryLock" class="empty-note">Waiting on step <b>04</b>.</div>
+    <div id="queryUI" class="hidden">
+      <label for="q" style="display:block;font-size:12.5px;color:var(--ink-2);font-weight:500;margin-bottom:5px">Ask a question</label>
+      <input type="text" id="q" value="How does overlap help when splitting documents?">
+      <div class="controls" style="margin-top:14px">
+        <div class="ctl">
+          <label for="topk">Chunks to keep <span class="val" id="topkV">3</span></label>
+          <input type="range" id="topk" min="1" max="8" step="1" value="3">
+        </div>
+        <button class="run" id="runQuery">Search the index</button>
+        <button class="ghost" id="tryQ">Try another question</button>
+      </div>
+      <div id="queryOut"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="stage" id="s6">
+  <div class="stage-head">
+    <span class="stage-num">06</span>
+    <h2 class="stage-title">Augment</h2>
+    <p class="stage-sub">The retrieved text is pasted into the prompt as context. This is the entire
+       trick — no weights change, the model simply gets better material to read.</p>
+  </div>
+  <div class="stage-body">
+    <div id="promptOut"><div class="empty-note">Waiting on step <b>05</b>.</div></div>
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section class="stage" id="s7">
+  <div class="stage-head">
+    <span class="stage-num">07</span>
+    <h2 class="stage-title">Generate</h2>
+    <p class="stage-sub">The answer is composed from the supplied passages, with citations back to
+       the chunks that produced it.</p>
+  </div>
+  <div class="stage-body">
+    <div id="genOut"><div class="empty-note">Waiting on step <b>06</b>.</div></div>
+  </div>
+</section>
+
+<footer>
+  Honest caveat about the embedder: real systems use a trained neural model that maps meaning to
+  geometry, so <em>car</em> and <em>automobile</em> land near each other. This one hashes weighted
+  terms into buckets, so it only matches shared vocabulary. The pipeline, the maths and the failure
+  modes are identical — the semantics are shallower. When retrieval here misses an obviously relevant
+  chunk because you used a synonym, you have just reproduced exactly why hybrid search and rerankers
+  exist.
+</footer>
+
+</div>
+
+<script>
+'use strict';
+
+/* ---------------------------------------------------------------
+   sample corpus
+--------------------------------------------------------------- */
+const SAMPLES = [
+  { name:'chunking.md', text:'Chunking splits a long document into passages before they are embedded. A chunk that is too large dilutes its vector across many topics and retrieval becomes vague. A chunk that is too small loses the surrounding context needed to answer properly. Overlap repeats a few words from the end of one chunk at the start of the next, so a sentence that straddles a boundary still appears whole somewhere in the index. Typical production settings sit between 200 and 800 tokens with 10 to 20 percent overlap, tuned against real questions rather than guessed.' },
+  { name:'embeddings.md', text:'An embedding model maps text to a fixed length vector of floating point numbers. Passages about similar subjects end up close together in that vector space. The crucial rule is that documents and queries must be embedded by the same model, because two different models produce coordinates in two unrelated spaces and the distances between them are meaningless. Vectors are usually normalised to unit length, which makes cosine similarity equivalent to a dot product and much cheaper to compute at scale.' },
+  { name:'retrieval.md', text:'Cosine similarity measures the angle between the query vector and each stored vector, ignoring magnitude, and returns a score between minus one and one. Scanning every vector is exact but slow, so vector databases build approximate nearest neighbour indexes such as HNSW or IVF that trade a little recall for a large speed gain. Retrieval returns the top k chunks. Keyword search using BM25 can be run alongside the vector search and the two result lists merged, an approach called hybrid search, which rescues exact identifiers and rare terms that embeddings handle poorly. A reranker model can then reorder the shortlist more accurately before anything reaches the prompt.' },
+  { name:'generation.md', text:'The retrieved passages are inserted into the prompt as context and the language model is instructed to answer only from that context and to say when the answer is absent. This grounding is what separates retrieval augmented generation from plain prompting, because the model quotes supplied evidence instead of recalling parametric memory that may be stale or invented. Citations map each claim back to its source chunk so a reader can verify it. Nothing in the model weights is changed by this process, which is why an index can be refreshed hourly while the model stays the same.' }
+];
+
+const SUGGESTED = [
+  'How does overlap help when splitting documents?',
+  'Why must the query use the same embedding model?',
+  'What is hybrid search and why is it useful?',
+  'What does cosine similarity actually measure?',
+  'Why does RAG reduce hallucination?',
+  'How do vector databases stay fast at scale?'
+];
+
+const STOP = new Set(('a an and are as at be been but by can do does for from had has have how i if in into is it its of on or that the their then there these they this to was were what when which who why will with you your your not no so such than them these us our are there'.split(' ')));
+
+/* ---------------------------------------------------------------
+   state
+--------------------------------------------------------------- */
+const S = {
+  docs: SAMPLES.map(d => ({...d})),
+  chunks: null,     // [{id, doc, words, text, overlapCount}]
+  idf: null,        // Map term -> idf
+  dims: 48,
+  vectors: null,    // [Float32Array]
+  indexed: false,
+  result: null,     // {query, qvec, scored, k}
+  qi: 0
+};
+
+/* ---------------------------------------------------------------
+   text utilities
+--------------------------------------------------------------- */
+function words(t){ return t.trim().split(/\s+/).filter(Boolean); }
+
+function stem(w){
+  w = w.replace(/[^a-z0-9]/gi,'').toLowerCase();
+  if(w.length > 4){
+    if(w.endsWith('ing')) w = w.slice(0,-3);
+    else if(w.endsWith('ies')) w = w.slice(0,-3)+'y';
+    else if(w.endsWith('ed')) w = w.slice(0,-2);
+    else if(w.endsWith('es')) w = w.slice(0,-2);
+    else if(w.endsWith('s') && !w.endsWith('ss')) w = w.slice(0,-1);
+  }
+  return w;
+}
+
+function terms(t){
+  return t.split(/\s+/).map(stem).filter(w => w.length > 1 && !STOP.has(w));
+}
+
+// FNV-1a — deterministic, so the same term always lands in the same dimension
+function hash32(str){
+  let h = 0x811c9dc5;
+  for(let i=0;i<str.length;i++){
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}
+
+/* ---------------------------------------------------------------
+   chunking
+--------------------------------------------------------------- */
+function chunkAll(docs, size, overlap){
+  const out = [];
+  const step = Math.max(1, size - overlap);
+  docs.forEach(doc => {
+    const w = words(doc.text);
+    if(!w.length) return;
+    for(let i = 0; i < w.length; i += step){
+      const slice = w.slice(i, i + size);
+      if(!slice.length) break;
+      // drop a trailing fragment that is entirely contained in the previous chunk
+      if(i > 0 && slice.length <= overlap) break;
+      out.push({
+        id: 'c' + String(out.length + 1).padStart(2,'0'),
+        doc: doc.name,
+        text: slice.join(' '),
+        n: slice.length,
+        lead: i > 0 ? Math.min(overlap, slice.length) : 0
+      });
+      if(i + size >= w.length) break;
+    }
+  });
+  return out;
+}
+
+/* ---------------------------------------------------------------
+   embedding: TF-IDF hashed into D buckets, L2 normalised
+--------------------------------------------------------------- */
+function buildIdf(chunks){
+  const df = new Map();
+  chunks.forEach(c => {
+    new Set(terms(c.text)).forEach(t => df.set(t, (df.get(t)||0) + 1));
+  });
+  const N = chunks.length;
+  const idf = new Map();
+  df.forEach((d,t) => idf.set(t, Math.log((N + 1) / (d + 0.5)) + 1));
+  return idf;
+}
+
+function embed(text, idf, D){
+  const v = new Float32Array(D);
+  const tf = new Map();
+  terms(text).forEach(t => tf.set(t, (tf.get(t)||0) + 1));
+  tf.forEach((count, t) => {
+    const weight = (1 + Math.log(count)) * (idf.get(t) ?? 1.0);
+    const h = hash32(t);
+    const dim = h % D;
+    const sign = ((h >>> 16) & 1) ? 1 : -1;   // signed hashing limits collision damage
+    v[dim] += sign * weight;
+  });
+  let norm = 0;
+  for(let i=0;i<D;i++) norm += v[i]*v[i];
+  norm = Math.sqrt(norm);
+  if(norm > 0) for(let i=0;i<D;i++) v[i] /= norm;
+  return v;
+}
+
+function cosine(a,b){
+  let s = 0;
+  for(let i=0;i<a.length;i++) s += a[i]*b[i];
+  return s; // both unit length already
+}
+
+/* ---------------------------------------------------------------
+   2-component PCA by power iteration, for the plot
+--------------------------------------------------------------- */
+function pca2(vecs){
+  const n = vecs.length, D = vecs[0].length;
+  const mean = new Float64Array(D);
+  vecs.forEach(v => { for(let i=0;i<D;i++) mean[i] += v[i]/n; });
+  const X = vecs.map(v => { const r = new Float64Array(D); for(let i=0;i<D;i++) r[i]=v[i]-mean[i]; return r; });
+
+  function power(exclude){
+    let w = new Float64Array(D);
+    for(let i=0;i<D;i++) w[i] = Math.sin((i+1)*12.9898)*43758.5453 % 1;
+    for(let it=0; it<80; it++){
+      const nw = new Float64Array(D);
+      X.forEach(x => {
+        let d=0; for(let i=0;i<D;i++) d += x[i]*w[i];
+        for(let i=0;i<D;i++) nw[i] += d*x[i];
+      });
+      if(exclude){
+        let d=0; for(let i=0;i<D;i++) d += nw[i]*exclude[i];
+        for(let i=0;i<D;i++) nw[i] -= d*exclude[i];
+      }
+      let m=0; for(let i=0;i<D;i++) m += nw[i]*nw[i];
+      m = Math.sqrt(m);
+      if(m < 1e-12) break;
+      for(let i=0;i<D;i++) w[i] = nw[i]/m;
+    }
+    return w;
+  }
+  const p1 = power(null);
+  const p2 = power(p1);
+  return { mean, p1, p2,
+    project(v){
+      let a=0,b=0;
+      for(let i=0;i<D;i++){ const d = v[i]-mean[i]; a += d*p1[i]; b += d*p2[i]; }
+      return [a,b];
+    }
+  };
+}
+
+/* ---------------------------------------------------------------
+   DOM helpers
+--------------------------------------------------------------- */
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function vecStrip(v, isQuery){
+  const max = Math.max(...Array.from(v, x => Math.abs(x))) || 1;
+  const bars = Array.from(v, x => {
+    const h = Math.max(1, Math.round(Math.abs(x)/max*24));
+    const o = 0.30 + 0.70*(Math.abs(x)/max);
+    return `<i style="height:${h}px;opacity:${o.toFixed(2)}"></i>`;
+  }).join('');
+  return `<div class="vec${isQuery?' q':''}" aria-hidden="true">${bars}</div>`;
+}
+
+function setRail(){
+  const map = { s1:true, s2:!!S.chunks, s3:!!S.vectors, s4:S.indexed, s5:!!S.result, s6:!!S.result, s7:!!S.result };
+  document.querySelectorAll('.rail-btn').forEach(b => {
+    b.classList.toggle('done', !!map[b.dataset.goto]);
+  });
+}
+
+function invalidate(from){
+  const hadChunks = !!S.chunks, hadVecs = !!S.vectors;
+  if(from <= 2){ S.chunks = null; S.idf = null; }
+  if(from <= 3){ S.vectors = null; }
+  if(from <= 4){ S.indexed = false; }
+  if(from <= 5){ S.result = null; }
+  if(from <= 2) $('#chunkOut').innerHTML = hadChunks
+      ? staleNote('Documents changed. Re-split to rebuild the chunks.')
+      : `<div class="empty-note">No chunks yet. Set a size and press <b>Split into chunks</b>.</div>`;
+  if(from <= 3){
+    $('#runEmbed').disabled = !S.chunks;
+    $('#embedOut').innerHTML = !S.chunks ? `<div class="empty-note">Waiting on step <b>02</b>.</div>`
+      : (hadVecs ? staleNote('Chunks changed. Re-embed to rebuild the vectors.')
+                 : `<div class="empty-note">Chunks ready. Press <b>Embed all chunks</b>.</div>`);
+  }
+  if(from <= 4) $('#indexOut').innerHTML = `<div class="empty-note">Waiting on step <b>03</b>.</div>`;
+  if(from <= 5){
+    $('#queryLock').classList.toggle('hidden', S.indexed);
+    $('#queryUI').classList.toggle('hidden', !S.indexed);
+    $('#queryOut').innerHTML = '';
+    $('#promptOut').innerHTML = `<div class="empty-note">Waiting on step <b>05</b>.</div>`;
+    $('#genOut').innerHTML = `<div class="empty-note">Waiting on step <b>06</b>.</div>`;
+  }
+  setRail();
+}
+const staleNote = m => `<div class="stale">${m}</div>`;
+
+/* ---------------------------------------------------------------
+   1 — documents
+--------------------------------------------------------------- */
+function renderDocs(){
+  $('#docGrid').innerHTML = S.docs.map((d,i) => `
+    <div class="doc">
+      <div class="doc-bar">
+        <span class="name">${esc(d.name)}</span>
+        <button class="x" data-del="${i}" title="Remove this document" aria-label="Remove ${esc(d.name)}">&times;</button>
+      </div>
+      <textarea data-doc="${i}" aria-label="Text of ${esc(d.name)}">${esc(d.text)}</textarea>
+    </div>`).join('');
+}
+
+$('#docGrid').addEventListener('input', e => {
+  const i = e.target.dataset.doc;
+  if(i !== undefined){ S.docs[i].text = e.target.value; invalidate(2); }
+});
+$('#docGrid').addEventListener('click', e => {
+  const i = e.target.dataset.del;
+  if(i !== undefined && S.docs.length > 1){ S.docs.splice(i,1); renderDocs(); invalidate(2); }
+});
+$('#addDoc').onclick = () => {
+  S.docs.push({ name:'notes-' + (S.docs.length+1) + '.md', text:'Paste your own text here. Anything the index does not contain, the model will refuse to answer.' });
+  renderDocs(); invalidate(2);
+};
+$('#resetDocs').onclick = () => { S.docs = SAMPLES.map(d => ({...d})); renderDocs(); invalidate(2); };
+
+/* ---------------------------------------------------------------
+   2 — chunk
+--------------------------------------------------------------- */
+$('#csize').oninput = e => {
+  $('#csizeV').textContent = e.target.value + ' words';
+  const ov = $('#covl');
+  ov.max = Math.max(0, e.target.value - 5);
+  if(+ov.value > +ov.max){ ov.value = ov.max; $('#covlV').textContent = ov.value + ' words'; }
+  invalidate(2);
+};
+$('#covl').oninput = e => { $('#covlV').textContent = e.target.value + ' words'; invalidate(2); };
+
+$('#runChunk').onclick = () => {
+  const size = +$('#csize').value, ov = +$('#covl').value;
+  S.chunks = chunkAll(S.docs, size, ov);
+  S.idf = buildIdf(S.chunks);
+  invalidate(3);
+
+  const totalWords = S.docs.reduce((a,d) => a + words(d.text).length, 0);
+  const avg = Math.round(S.chunks.reduce((a,c) => a + c.n, 0) / S.chunks.length);
+
+  $('#chunkOut').innerHTML = `
+    <div class="stat-row">
+      <div class="stat"><b>${S.docs.length}</b><span>documents in</span></div>
+      <div class="stat"><b>${totalWords}</b><span>words total</span></div>
+      <div class="stat"><b>${S.chunks.length}</b><span>chunks out</span></div>
+      <div class="stat"><b>${avg}</b><span>avg words per chunk</span></div>
+      <div class="stat"><b>${ov}</b><span>words repeated at each seam</span></div>
+    </div>
+    <div class="chunk-list">${S.chunks.map(renderChunk).join('')}</div>
+    <p class="note">The shaded opening of each chunk is text carried over from the one before it.
+       Drag overlap to <b>0</b> and re-split: the seams go hard, and a fact split across a boundary
+       becomes unretrievable because neither chunk states it fully.</p>`;
+  $('#runEmbed').disabled = false;
+  setRail();
+};
+
+function renderChunk(c){
+  const w = words(c.text);
+  const body = c.lead
+    ? `<span class="ov">${esc(w.slice(0,c.lead).join(' '))}</span> ${esc(w.slice(c.lead).join(' '))}`
+    : esc(c.text);
+  return `<div class="chunk" id="chunk-${c.id}">
+      <div class="cid"><b>${c.id}</b>${esc(c.doc)}<br>${c.n}w</div>
+      <div class="ctext">${body}</div>
+    </div>`;
+}
+
+/* ---------------------------------------------------------------
+   3 — embed
+--------------------------------------------------------------- */
+$('#dims').oninput = e => { $('#dimsV').textContent = e.target.value; invalidate(3); };
+
+$('#runEmbed').onclick = () => {
+  S.dims = +$('#dims').value;
+  S.vectors = S.chunks.map(c => embed(c.text, S.idf, S.dims));
+  invalidate(4);
+
+  const sample = S.chunks.slice(0,3);
+  $('#embedOut').innerHTML = `
+    <div class="stat-row">
+      <div class="stat"><b>${S.chunks.length} &times; ${S.dims}</b><span>matrix produced</span></div>
+      <div class="stat"><b>${S.idf.size}</b><span>distinct terms after stemming</span></div>
+      <div class="stat"><b>1.000</b><span>length of every vector</span></div>
+    </div>
+    <div class="chunk-list">
+      ${sample.map((c,i) => `
+        <div class="chunk">
+          <div class="cid"><b>${c.id}</b>${esc(c.doc)}</div>
+          <div class="ctext">${esc(c.text.slice(0,150))}${c.text.length>150?'…':''}
+            ${vecStrip(S.vectors[i])}
+            <span class="vec-cap">[${Array.from(S.vectors[i]).slice(0,6).map(x=>x.toFixed(3)).join(', ')}, … ] &nbsp;${S.dims} dims</span>
+          </div>
+        </div>`).join('')}
+    </div>
+    <p class="note">Only the first three are shown; all ${S.chunks.length} were embedded.
+       Terms are weighted by how rare they are across the corpus, so <b>cosine</b> in the next step
+       gives a distinctive word like "HNSW" far more pull than "the". Push dimensions down to 8 and
+       re-embed to watch unrelated terms collide into the same bucket and wreck retrieval.</p>`;
+
+  // step 4 renders straight after, since indexing is a store operation not a transform
+  S.indexed = true;
+  renderIndex();
+  invalidate(5);
+  setRail();
+};
+
+/* ---------------------------------------------------------------
+   4 — index
+--------------------------------------------------------------- */
+function renderIndex(){
+  const rows = S.chunks.map((c,i) => `
+    <tr>
+      <td class="src">${c.id}</td>
+      <td class="src">${esc(c.doc)}</td>
+      <td style="min-width:150px">${vecStrip(S.vectors[i])}</td>
+      <td class="snip">${esc(c.text.slice(0,64))}…</td>
+    </tr>`).join('');
+  $('#indexOut').innerHTML = `
+    <table class="scores">
+      <thead><tr><th>id</th><th>source</th><th>vector</th><th>stored text</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="note">Notice the store keeps the <b>original text</b> next to each vector. Vectors are
+       one-way — you can't reconstruct a passage from its numbers — so the text has to be carried
+       along or there would be nothing to put in the prompt later.</p>`;
+  $('#queryLock').classList.add('hidden');
+  $('#queryUI').classList.remove('hidden');
+}
+
+/* ---------------------------------------------------------------
+   5 — retrieve
+--------------------------------------------------------------- */
+$('#topk').oninput = e => { $('#topkV').textContent = e.target.value; };
+$('#tryQ').onclick = () => { S.qi = (S.qi+1) % SUGGESTED.length; $('#q').value = SUGGESTED[S.qi]; };
+$('#q').addEventListener('keydown', e => { if(e.key === 'Enter') $('#runQuery').click(); });
+
+$('#runQuery').onclick = () => {
+  const query = $('#q').value.trim();
+  if(!query) return;
+  const k = +$('#topk').value;
+  const qvec = embed(query, S.idf, S.dims);
+  const scored = S.chunks.map((c,i) => ({ c, i, score: cosine(qvec, S.vectors[i]) }))
+                         .sort((a,b) => b.score - a.score);
+  S.result = { query, qvec, scored, k };
+
+  const qterms = terms(query).filter(t => S.idf.has(t));
+  const missing = terms(query).filter(t => !S.idf.has(t));
+
+  const rows = scored.map((r, rank) => {
+    const inCtx = rank < k;
+    const pct = Math.max(0, r.score) * 100;
+    const row = `<tr class="${inCtx ? 'in' : ''}">
+        <td class="src">${r.c.id}</td>
+        <td class="src">${esc(r.c.doc)}</td>
+        <td class="num">${r.score.toFixed(4)}</td>
+        <td><div class="simbar"><i style="width:${pct.toFixed(1)}%"></i></div></td>
+        <td class="snip">${esc(r.c.text.slice(0,70))}…</td>
+      </tr>`;
+    const cut = rank === k-1
+      ? `<tr class="cut-row"><td colspan="5"><div class="cut">top-k cut &mdash; everything below is discarded</div></td></tr>`
+      : '';
+    return row + cut;
+  }).join('');
+
+  $('#queryOut').innerHTML = `
+    <div style="margin-top:20px">
+      <div class="chunk" style="border-color:var(--heat)">
+        <div class="cid"><b>query</b>embedded</div>
+        <div class="ctext">${esc(query)}
+          ${vecStrip(qvec, true)}
+          <span class="vec-cap">matched terms: ${qterms.length ? qterms.map(esc).join(', ') : '(none)'}${missing.length ? ' &nbsp;·&nbsp; not in corpus: ' + missing.map(esc).join(', ') : ''}</span>
+        </div>
+      </div>
+    </div>
+    <p class="note" style="margin-bottom:16px">Same embedding function, same ${S.dims} dimensions, same
+      IDF weights from ingestion. Swap in a different model here and every score below becomes noise.</p>
+    <table class="scores">
+      <thead><tr><th>chunk</th><th>source</th><th>cosine</th><th>similarity</th><th>text</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="plot-wrap" style="margin-top:22px">
+      ${plotSVG()}
+      <div class="legend">
+        <p>The index flattened to two dimensions so the geometry is visible. Retrieval is
+          literally this: find the dots nearest the question.</p>
+        <div class="key"><span class="sw" style="background:var(--indigo);opacity:.45"></span> chunk, not retrieved</div>
+        <div class="key"><span class="sw" style="background:var(--heat)"></span> chunk in the top ${k}</div>
+        <div class="key"><span class="sw" style="background:var(--ink)"></span> the question</div>
+        <p style="margin-top:14px;font-size:12.5px;color:var(--ink-3)">Two axes can't hold ${S.dims}
+          dimensions faithfully, so treat the picture as a sketch and the cosine column as the truth.</p>
+      </div>
+    </div>`;
+
+  buildPrompt();
+  setRail();
+  document.getElementById('s6').scrollIntoView({behavior:'smooth', block:'start'});
+};
+
+function plotSVG(){
+  const { qvec, scored, k } = S.result;
+  const all = S.vectors.concat([qvec]);
+  const p = pca2(all);
+  const pts = S.vectors.map(v => p.project(v));
+  const qp = p.project(qvec);
+  const every = pts.concat([qp]);
+  const xs = every.map(a=>a[0]), ys = every.map(a=>a[1]);
+  const W=560,H=360,M=34;
+  const minx=Math.min(...xs), maxx=Math.max(...xs), miny=Math.min(...ys), maxy=Math.max(...ys);
+  const sx = x => M + (maxx-minx < 1e-9 ? .5 : (x-minx)/(maxx-minx)) * (W-2*M);
+  const sy = y => H-M - (maxy-miny < 1e-9 ? .5 : (y-miny)/(maxy-miny)) * (H-2*M);
+  const topIds = new Set(scored.slice(0,k).map(r => r.i));
+
+  let g = '';
+  // connective lines from query to retrieved
+  scored.slice(0,k).forEach(r => {
+    const pt = pts[r.i];
+    g += `<line x1="${sx(qp[0])}" y1="${sy(qp[1])}" x2="${sx(pt[0])}" y2="${sy(pt[1])}" stroke="var(--heat)" stroke-width="1" stroke-dasharray="3 3" opacity=".65"/>`;
+  });
+  pts.forEach((pt,i) => {
+    const hit = topIds.has(i);
+    g += `<circle cx="${sx(pt[0])}" cy="${sy(pt[1])}" r="${hit?7:5}" fill="${hit?'var(--heat)':'var(--indigo)'}" opacity="${hit?1:.4}"/>`;
+    g += `<text x="${sx(pt[0])+10}" y="${sy(pt[1])+4}" font-family="IBM Plex Mono, monospace" font-size="10" fill="${hit?'var(--heat)':'var(--ink-3)'}">${S.chunks[i].id}</text>`;
+  });
+  const qx = sx(qp[0]), qy = sy(qp[1]);
+  g += `<line x1="${qx-9}" y1="${qy}" x2="${qx+9}" y2="${qy}" stroke="var(--ink)" stroke-width="2.5"/>
+        <line x1="${qx}" y1="${qy-9}" x2="${qx}" y2="${qy+9}" stroke="var(--ink)" stroke-width="2.5"/>
+        <text x="${qx+12}" y="${qy-8}" font-family="IBM Plex Sans, sans-serif" font-size="11.5" font-weight="600" fill="var(--ink)">question</text>`;
+
+  return `<svg class="plot" viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="Two dimensional projection of the vector index showing which chunks sit nearest the question">
+      <rect x="${M-12}" y="${M-12}" width="${W-2*M+24}" height="${H-2*M+24}" fill="none" stroke="var(--rule-soft)"/>
+      ${g}
+    </svg>`;
+}
+
+/* ---------------------------------------------------------------
+   6 — augment
+--------------------------------------------------------------- */
+function buildPrompt(){
+  const { query, scored, k } = S.result;
+  const ctx = scored.slice(0,k);
+  const ctxText = ctx.map(r => `[${r.c.id}] ${r.c.text}`).join('\n\n');
+  const sys = 'Answer the question using only the context below. Cite the chunk id for each claim. If the context does not contain the answer, say so.';
+  const full = sys + '\n\n' + ctxText + '\n\n' + query;
+  const approxTokens = Math.round(full.length / 4);
+
+  $('#promptOut').innerHTML = `
+    <pre class="prompt"><span class="k">system:</span> ${esc(sys)}
+
+<span class="k">&lt;context&gt;</span>
+${ctx.map(r => `<span class="c">[${r.c.id}]</span> ${esc(r.c.text)}`).join('\n\n')}
+<span class="k">&lt;/context&gt;</span>
+
+<span class="k">user:</span> <span class="q">${esc(query)}</span></pre>
+    <div class="tokline">~${approxTokens} tokens · ${ctx.length} chunks retrieved out of ${S.chunks.length} indexed · ${Math.round(ctx.length/S.chunks.length*100)}% of the corpus sent</div>
+    <p class="note">That last number is the whole economic argument. The model never sees the other
+       ${S.chunks.length - ctx.length} chunks, which is how a corpus far larger than any context
+       window still gets used. Raise <b>chunks to keep</b> and the prompt grows, cost grows, and the
+       signal starts drowning in loosely related passages.</p>`;
+
+  generate();
+}
+
+/* ---------------------------------------------------------------
+   7 — generate
+--------------------------------------------------------------- */
+function sentences(t){
+  return t.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(s => s.length > 25);
+}
+
+function generate(){
+  const { query, scored, k } = S.result;
+  const ctx = scored.slice(0,k);
+  const qt = new Set(terms(query));
+
+  const cands = [];
+  ctx.forEach(r => sentences(r.c.text).forEach(s => {
+    const st = terms(s);
+    const hits = st.filter(t => qt.has(t)).length;
+    if(hits > 0) cands.push({ s, id: r.c.id, score: hits / Math.sqrt(st.length || 1) });
+  }));
+  cands.sort((a,b) => b.score - a.score);
+
+  const picked = [];
+  cands.forEach(c => {
+    if(picked.length >= 3) return;
+    if(picked.some(p => p.s === c.s)) return;
+    picked.push(c);
+  });
+
+  let grounded;
+  if(!picked.length){
+    grounded = `<span class="tag">grounded answer</span>The context doesn't cover this. Nothing in
+      the retrieved chunks addresses the question, so the honest output is a refusal rather than a guess.
+      <em>This is the behaviour you want</em> — and it only happens because the prompt told the model
+      to stay inside the context.`;
+  } else {
+    grounded = `<span class="tag">grounded answer &mdash; built only from the retrieved chunks</span>` +
+      picked.map(p => `<mark>${esc(p.s)}</mark><span class="cite">[${p.id}]</span>`).join(' ');
+  }
+
+  const ungrounded = `<span class="tag">same question, no retrieval</span>
+     Without a context block the model answers from parametric memory alone. It will still produce
+     fluent, confident prose about
+     <em>${esc(terms(query).slice(0,3).join(', ') || 'the topic')}</em> &mdash; but with no passage to
+     point at, nothing can be checked, nothing can be cited, and anything learned after training
+     simply isn't there. The sentences above carry chunk ids. This one can't.`;
+
+  $('#genOut').innerHTML = `
+    <div class="answer-tabs">
+      <button class="ghost" id="tabA" aria-pressed="true">With retrieval</button>
+      <button class="ghost" id="tabB" aria-pressed="false">Without retrieval</button>
+    </div>
+    <div class="ans" id="ansA">${grounded}</div>
+    <div class="ans bad hidden" id="ansB">${ungrounded}</div>
+    <p class="note">A real system hands the prompt to an LLM here. This page stitches the answer from
+       the highest-overlap sentences in the retrieved chunks instead, so you can see exactly which
+       passage each clause came from &mdash; that traceability is the point. Now go back to step 02,
+       set chunk size to 90, and run the whole thing again. Retrieval gets noticeably blunter, because
+       every vector is now an average of too many ideas.</p>`;
+
+  $('#tabA').onclick = () => toggleAns(true);
+  $('#tabB').onclick = () => toggleAns(false);
+}
+
+function toggleAns(a){
+  $('#ansA').classList.toggle('hidden', !a);
+  $('#ansB').classList.toggle('hidden', a);
+  $('#tabA').setAttribute('aria-pressed', a);
+  $('#tabB').setAttribute('aria-pressed', !a);
+}
+
+/* ---------------------------------------------------------------
+   rail navigation
+--------------------------------------------------------------- */
+document.querySelectorAll('.rail-btn').forEach(b => {
+  b.onclick = () => document.getElementById(b.dataset.goto).scrollIntoView({behavior:'smooth', block:'start'});
+});
+const obs = new IntersectionObserver(es => {
+  es.forEach(e => {
+    if(e.isIntersecting){
+      document.querySelectorAll('.rail-btn').forEach(b => b.classList.toggle('active', b.dataset.goto === e.target.id));
+    }
+  });
+}, { rootMargin:'-70px 0px -60% 0px' });
+document.querySelectorAll('section.stage').forEach(s => obs.observe(s));
+
+/* ---------------------------------------------------------------
+   boot
+--------------------------------------------------------------- */
+renderDocs();
+$('#covl').max = +$('#csize').value - 5;
+setRail();
+</script>
+</body>
+</html>
